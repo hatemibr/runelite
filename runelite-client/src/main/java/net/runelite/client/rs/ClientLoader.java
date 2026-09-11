@@ -92,6 +92,19 @@ public class ClientLoader implements Supplier<Applet>
 	 */
 	private static final String EMBEDDED_CLIENT_PROPERTY = "runelite.embeddedClient";
 
+	/**
+	 * The client this fork exists to run, used when the property above names none.
+	 *
+	 * A shaded jar is launched by being double-clicked as often as from a command line, and
+	 * that way of starting it can pass no system properties at all. Without a default the jar
+	 * would go looking for Jagex's gamepack -- which is not what anyone who built this fork
+	 * wanted, and fails slowly, over the network, rather than at once.
+	 *
+	 * <p>Still overridable, and an empty value still falls through to the vanilla path, so
+	 * naming a different client or asking for the real one both remain possible.
+	 */
+	private static final String DEFAULT_EMBEDDED_CLIENT = "com.runescape.Client";
+
 	private static final int NUM_ATTEMPTS = 6;
 	private static File LOCK_FILE = new File(RuneLite.CACHE_DIR, "cache.lock");
 	private static File VANILLA_CACHE = new File(RuneLite.CACHE_DIR, "vanilla.cache");
@@ -133,7 +146,8 @@ public class ClientLoader implements Supplier<Applet>
 
 	private Object doLoad()
 	{
-		final String embeddedClass = System.getProperty(EMBEDDED_CLIENT_PROPERTY);
+		final String embeddedClass = System.getProperty(EMBEDDED_CLIENT_PROPERTY,
+			DEFAULT_EMBEDDED_CLIENT);
 		if (!Strings.isNullOrEmpty(embeddedClass))
 		{
 			return loadEmbeddedClient(embeddedClass);
