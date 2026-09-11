@@ -11,3 +11,14 @@ project.properties
 .vscode
 .factorypath
 .DS_Store
+# Boot scratch: the game cache this fetches, the redirected output of a run, and the
+# screenshots taken of it. All reproducible by running it again.
+/.cache/
+/.tools/
+/boot_out.txt
+/boot_err.txt
+/boot_pid.txt
+/*.png
+
+# Scratch file for composing commit messages without a BOM.
+/.commitmsg

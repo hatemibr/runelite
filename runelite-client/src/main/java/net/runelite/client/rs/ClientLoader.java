@@ -33,12 +33,15 @@ import com.google.common.hash.HashingOutputStream;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import java.applet.Applet;
+import java.applet.AppletContext;
+import java.applet.AppletStub;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
@@ -79,6 +82,16 @@ import okhttp3.Response;
 @SuppressWarnings({"deprecation", "removal"})
 public class ClientLoader implements Supplier<Applet>
 {
+	/**
+	 * Names an Applet class on the classpath to run instead of Old School RuneScape.
+	 *
+	 * Set for a game client that is not Jagex's, where there is no jav_config to fetch, no
+	 * gamepack to download, verify or patch, and no update check to make, because the client
+	 * shipped with the launcher. Everything that follows it is unchanged: the applet is bound
+	 * as the Client if it implements the interface, and driven through the same lifecycle.
+	 */
+	private static final String EMBEDDED_CLIENT_PROPERTY = "runelite.embeddedClient";
+
 	private static final int NUM_ATTEMPTS = 6;
 	private static File LOCK_FILE = new File(RuneLite.CACHE_DIR, "cache.lock");
 	private static File VANILLA_CACHE = new File(RuneLite.CACHE_DIR, "vanilla.cache");
@@ -120,6 +133,12 @@ public class ClientLoader implements Supplier<Applet>
 
 	private Object doLoad()
 	{
+		final String embeddedClass = System.getProperty(EMBEDDED_CLIENT_PROPERTY);
+		if (!Strings.isNullOrEmpty(embeddedClass))
+		{
+			return loadEmbeddedClient(embeddedClass);
+		}
+
 		if (updateCheckMode == NONE)
 		{
 			return null;
@@ -565,6 +584,79 @@ public class ClientLoader implements Supplier<Applet>
 			}
 
 			return classLoader;
+		}
+	}
+
+	/**
+	 * Instantiates an embedded client by name, reflectively.
+	 *
+	 * By name rather than by type so that the game client stays a runtime dependency of this
+	 * module and never reaches its compiler, which matters because it is free to be built for
+	 * a newer Java release than this one targets.
+	 */
+	private Object loadEmbeddedClient(String className)
+	{
+		try
+		{
+			SplashScreen.stage(.465, "Starting", "Starting the game client");
+
+			Applet rs = (Applet) Class.forName(className).getDeclaredConstructor().newInstance();
+			// Nothing here needs one, but an Applet without a stub throws from getParameter,
+			// and that would surface during startup as a fault in the client rather than as
+			// the missing piece of its host.
+			rs.setStub(new EmbeddedAppletStub());
+
+			log.info("embedded client {} (implements the api: {})", className, rs instanceof Client);
+
+			SplashScreen.stage(.5, null, "Starting core classes");
+			return rs;
+		}
+		catch (ReflectiveOperationException | ClassCastException e)
+		{
+			log.error("Error loading embedded client {}", className, e);
+			SwingUtilities.invokeLater(() -> FatalErrorDialog.showNetErrorWindow("loading the embedded client", e));
+			return e;
+		}
+	}
+
+	/**
+	 * The least an Applet needs to not fault when asked about a page it was never on.
+	 */
+	private static class EmbeddedAppletStub implements AppletStub
+	{
+		@Override
+		public boolean isActive()
+		{
+			return true;
+		}
+
+		@Override
+		public URL getDocumentBase()
+		{
+			return null;
+		}
+
+		@Override
+		public URL getCodeBase()
+		{
+			return null;
+		}
+
+		@Override
+		public String getParameter(String name)
+		{
+			return null;
+		}
+
+		@Override
+		public AppletContext getAppletContext()
+		{
+			return null;
+		}
+
+		@Override
+		public void appletResize(int width, int height)
+		{
 		}
 	}
 

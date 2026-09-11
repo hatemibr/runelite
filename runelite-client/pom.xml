@@ -45,6 +45,15 @@
 
 	<dependencies>
 		<dependency>
+			<!-- The game client. Runtime only: ClientLoader names it in a property and
+			     instantiates it reflectively, so nothing here compiles against it, which
+			     is what lets it be built for a newer Java release than this module. -->
+			<groupId>com.elvarg</groupId>
+			<artifactId>elvarg-client</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
 		</dependency>
@@ -312,9 +321,14 @@
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
+				<!-- 3.4.0 rather than the 3.3.2 this shipped with, because the game client's
+				     renderer is built against it: lwjgl3-awt calls a User32.RegisterClassEx
+				     overload that 3.3.2 does not have, and the GL context never comes up.
+				     The only thing here that cares is RuneLite's own GPU plugin, which a
+				     client that renders its own scene does not use. -->
 				<groupId>org.lwjgl</groupId>
 				<artifactId>lwjgl-bom</artifactId>
-				<version>3.3.2</version>
+				<version>3.4.0</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
