@@ -19,6 +19,16 @@ project.properties
 /boot_err.txt
 /boot_pid.txt
 /*.png
+/*.txt
+
+# The isolated RuneLite home a local run is pointed at, so a test session cannot disturb
+# the real one. Holds that session's profile, its installed plugins and its logs.
+/.home/
+
+# Game data the client writes or unpacks beside itself when run from here. Large, binary,
+# and rebuilt from the cache on demand -- none of it belongs to this repository.
+/cache/
+/textures/
 
 # Scratch file for composing commit messages without a BOM.
 /.commitmsg
