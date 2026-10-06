@@ -48,8 +48,8 @@
 			<!-- The game client. Runtime only: ClientLoader names it in a property and
 			     instantiates it reflectively, so nothing here compiles against it, which
 			     is what lets it be built for a newer Java release than this module. -->
-			<groupId>com.elvarg</groupId>
-			<artifactId>elvarg-client</artifactId>
+			<groupId>com.royalscape</groupId>
+			<artifactId>royalscape-client</artifactId>
 			<version>1.0.0-SNAPSHOT</version>
 			<scope>runtime</scope>
 		</dependency>
